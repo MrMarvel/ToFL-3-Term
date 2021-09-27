@@ -165,7 +165,14 @@ string convertToPostfix(const std::string& infix) {
         }
         // If it's a digit or '.' or a letter ("variables"), add it to the output
         else if (isalnum(current) || '.' == current) {
-            postfix << current;
+			postfix << current;
+			int j;
+			for (j = i+1; j < l; j++) {
+				const char subCurrent = infix[j];
+				if (!isalnum(subCurrent)) break;
+				postfix << subCurrent;
+			}
+			i = j - 1;
         }
 
         else if ('(' == current) {

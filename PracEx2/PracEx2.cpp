@@ -64,6 +64,14 @@ int evaluatePostfix(const string& postfix) {
             continue;
         } else if (isalnum(current)) {
             int x = current - '0';
+			int j;
+			for (j = i + 1; j < l; j++) {
+				const char subCurrent = postfix[j];
+				if (!isalnum(subCurrent)) break;
+				int y = subCurrent - '0';
+				x = 10 * x + y;
+			}
+			i = j - 1;
             vars.push(x);
         } else if (isOperator(current)) {
             char oper = current;
