@@ -14,7 +14,7 @@ int main();
 bool isOperator(char);
 bool precedence(char, char);
 int evaluatePostfix(const string&);
-
+//ТЕСТ ГИТА
 istream* input = (istream*)&cin;//new ifstream("input.txt");
 
 int main() {
