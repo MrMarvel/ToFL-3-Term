@@ -27,7 +27,9 @@ public:
         state += s;
     }
     State() {}
-    friend bool operator!=(State& s1, State& s2);
+    bool operator !=(const State& s2) const {
+        return state != s2.state;
+    }
     bool isRight() {
         return !state.empty();
     }
@@ -35,24 +37,25 @@ public:
         return state < s2.state;
     }
     string to_string() {
-        return string("State{") + "state=" + state + "}";
+        return state;
+        //return string("State{") + "state=" + state + "}";
     }
 
 };
 
 size_t State::id_inc = 1;
 
-class CompoundState : public State{
+class CompoundState {
 public:
     set<State> states;
 public:
-    CompoundState(char s) : State(s){
+    CompoundState(char s) {
         states.insert(s);
     }
-    CompoundState(string s) : State(s){
+    CompoundState(string s) {
         states.insert(s);
     }
-    CompoundState(State s) : State(s){
+    CompoundState(State s) {
         states.insert(s);
     }
     CompoundState() {}
@@ -62,11 +65,12 @@ public:
         }
         return true;
     }
-    bool operator==(const CompoundState& s2) {
+    bool operator==(const CompoundState& s2) const{
         if (states.size() != s2.states.size()) return false;
-        for (auto s : states) {
-            auto it = s2.states.find(s);
-            if (it == s2.states.end()) return false;
+        auto it = states.begin();
+        auto it2 = s2.states.begin();
+        for (; it != states.end(); it++, it2++) {
+            if (*it != *it2) return false;
         }
         return true;
     }
@@ -78,60 +82,46 @@ public:
     }
     void insert(State st) {
         states.insert(st);
-        if (states.size() < 2) {
-            state = st.state;
-            return;
-        }
-        state = "(";
-        bool o;
-        o = false;
-        for (auto s : states) {
-            if (o) state += "+";
-            state += s.state;
-            o = true;
-        }
-        state += ")";
-    }
-    void insert(CompoundState st) {
-        insert((State)st);
     }
     string to_string() {
         string stS = "";
         bool o = false;
         for (auto s : states) {
-            if (o) stS += ", ";
+            if (o) stS += "+";
             stS += s.to_string();
             o = true;
         }
-        return string("CompoundState{") + "states=[" + stS + "]" + "}";
+        string msg = stS;
+        if (states.size() > 1) msg = "(" + msg + ")";
+        return msg;
     }
 };
 
 class Transition {
 public:
-    shared_ptr<CompoundState> from;
+    CompoundState from;
     char ch = ' ';
-    shared_ptr<CompoundState> to;
+    CompoundState to;
 public:
     Transition(CompoundState from, char ch, CompoundState to) {
-        this->from = shared_ptr<CompoundState>(new CompoundState(from));
+        this->from = from;
         this->ch = ch;
-        this->to = shared_ptr<CompoundState>(new CompoundState(to));
+        this->to = to;
     }
     Transition() {}
     bool static hasSamePrefix(Transition& s1, Transition& s2) {
-        if (*s1.from != *s2.from) return false;
+        if (s1.from != s2.from) return false;
         if (s1.ch != s2.ch) return false;
         return true;
     }
     bool isRight() {
-        if (!from) return false;
-        if (!from->isRight()) return false;
-        if (!to) return false;
-        if (!to->isRight()) return false;
+        if (from.states.empty()) return false;
+        if (!from.isRight()) return false;
+        if (to.states.empty()) return false;
+        if (!to.isRight()) return false;
     }
     string to_string() {
-        return string("Transition{") + "from=" + from->to_string() + ", ch=" + ch + ", to=" + to->to_string() + "}";
+        return string("Transition{") + "from=" + from.to_string() + ", ch=" + ch + ", to=" + to.to_string() + "}";
     }
 };
 
@@ -142,9 +132,9 @@ public:
     vector<CompoundState> transition(CompoundState from, char ch) {
         vector<CompoundState> list;
         for (auto t : transitions) {
-            if (*t.from != from) continue;
+            if (t.from != from) continue;
             if (t.ch != ch) continue;
-            list.push_back(*t.to);
+            list.push_back(t.to);
         }
         return list;
     }
@@ -180,7 +170,7 @@ public:
     set<char> A; //Алфавит входных символов
     TransitionFunction F; //Множество переходов(функция переходов)
     CompoundState S; //Стартовое состояние
-    set<State> E; //Конечные состояния
+    set<CompoundState> E; //Конечные состояния
     string to_string() {
         string qS = "";
         bool o = false;
@@ -254,7 +244,7 @@ Automation get_DFA_By_NFA_depr2(Automation nfa) {
                 if (list.size() > 1) {
                     CompoundState resSt;
                     for (auto s : list) {
-                        resSt.insert(s);
+                        //resSt.insert(s);
                     }
                     resultStates = (resSt);
                 } else resultStates = (list.front());
@@ -273,34 +263,34 @@ Automation get_DFA_By_NFA_depr2(Automation nfa) {
     return dfa;
 }
 
-template<typename T>
-shared_ptr<T> findInVector(vector<T> v, T val) {
-    auto it = find(v.begin(), v.end(), val);
-    if (it == it.end()) return nullptr;
-    return *it;
-}
 
 Automation get_DFA_By_NFA(Automation nfa) {
     Automation dfa;
-    vector<vector<CompoundState>> Q;
+    vector<CompoundState> Q;
     TransitionFunction F;
     Q.push_back({ nfa.S });
     for (size_t i = 0; i < Q.size(); i++) {
-        vector<CompoundState> states = Q[i];
+        CompoundState compoundState = Q[i];
         for (char ch : nfa.A) {
-            vector<CompoundState> resultStates;
-            for (CompoundState state : states) {
-                vector<CompoundState> list = nfa.F.transition(state, ch);
-                if (list.size() == 0) continue;
-                for (auto s : list) {
-                    if (findInVector(resultStates, s)) continue;
-                    resultStates.push_back(s);
+            bool isEnd = false;
+            CompoundState resultCompoundState;
+            for (State state : compoundState.states) {
+                vector<CompoundState> psevResultCompoundStates = nfa.F.transition(state, ch);
+                for (CompoundState foundConversations : psevResultCompoundStates) {
+                    for (State state : foundConversations.states) {
+                        resultCompoundState.states.insert(state);
+                        auto it = find(nfa.E.begin(), nfa.E.end(), state);
+                        if (it == nfa.E.end()) continue;
+                        isEnd = true;
+                    }
                 }
             }
-            Transition t = Transition(states, ch, resultStates);
+            Transition t = Transition(compoundState, ch, resultCompoundState);
             F.addTransition(t);
-            if (findInVector(Q, resultStates)) continue;
-            Q.push_back(resultStates);
+            auto it = find(Q.begin(), Q.end(), resultCompoundState);
+            if (it != Q.end()) continue;
+            Q.push_back(resultCompoundState);
+            if (isEnd) dfa.E.insert(resultCompoundState);
         }
     }
     dfa.A = nfa.A;
@@ -417,7 +407,7 @@ void printAutomation(Automation a) {
     o = false;
     for (auto s : a.Q) {
         if (o) cout << ", ";
-        cout << s.state;
+        cout << s.to_string();
         o = true;
     }
     cout << "\n";
@@ -433,18 +423,18 @@ void printAutomation(Automation a) {
 
     printf("\nState-transitions function:\n");
     for (auto tr : a.F.transitions) {
-        cout << "D(" << tr.from->state << ", " << tr.ch << ") = " << tr.to->state << "\n";
+        cout << "D(" << tr.from.to_string() << ", " << tr.ch << ") = " << tr.to.to_string() << "\n";
     }
 
     printf("\nInitial states: ");
-    cout << a.S.state;
+    cout << a.S.to_string();
     printf("\n");
 
     printf("\nFinal states: ");
     o = false;
     for (auto s : a.E) {
         if (o) cout << ", ";
-        cout << s.state;
+        cout << s.to_string();
         o = true;
     }
     printf("\n");
@@ -473,7 +463,3 @@ int main() {
 //   4. В окне "Список ошибок" можно просматривать ошибки.
 //   5. Последовательно выберите пункты меню "Проект" > "Добавить новый элемент", чтобы создать файлы кода, или "Проект" > "Добавить существующий элемент", чтобы добавить в проект существующие файлы кода.
 //   6. Чтобы снова открыть этот проект позже, выберите пункты меню "Файл" > "Открыть" > "Проект" и выберите SLN-файл.
-
-bool operator!=(State& s1, State& s2) {
-    return s1.state != s2.state;
-}
