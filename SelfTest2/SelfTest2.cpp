@@ -6,10 +6,10 @@
 
 using namespace std;
 
-typedef enum states { K, END, ER };
+enum states { K, END, ER };
 
 void lexer(string);
-void lexer(string filename) {
+void lexer(const string filename) {
 	ifstream ifs = ifstream(filename);
 	if (!ifs.is_open()) {
 		printf("Не получается открыть файл ");

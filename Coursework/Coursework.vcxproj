@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{9053fb7d-7276-4a40-b444-9ea708f14a14}</ProjectGuid>
-    <RootNamespace>PracEx4</RootNamespace>
+    <ProjectGuid>{bbb9ba0c-9ca4-4a6f-9137-6f5821a8e69a}</ProjectGuid>
+    <RootNamespace>Coursework</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -139,10 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="PracEx4.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="input.txt" />
+    <ClCompile Include="Coursework.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
