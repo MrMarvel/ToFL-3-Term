@@ -3,6 +3,9 @@
 
 #include <iostream>
 #include <deque>
+#include <fstream>
+#include <list>
+#include <vector>
 
 using namespace std;
 
@@ -25,22 +28,15 @@ enum lex_type {
     //
     LEX_NULL,
     // КЛЮЧЕВЫЕ СЛОВА
-    LEX_AND, // &&
     LEX_BEGIN, // begin
     LEX_BOOL, // bool
-    LEX_DO, // ?
     LEX_ELSE, // else
     LEX_END, // end
     LEX_IF, // if
     LEX_FALSE, // false
     LEX_INT, // int
-    LEX_NOT, // not
-    LEX_OR, // ||
-    LEX_PROGRAM, // ?
     LEX_READLN, // readln
-    LEX_THEN, // ?
     LEX_TRUE, // true
-    LEX_VAR, // :=
     LEX_WHILE, // while
     LEX_WRITELN, // writeln
 
@@ -50,7 +46,16 @@ enum lex_type {
     LEX_FLOAT, // float
 
     LEX_FIN, // КОНЕЦ ФАЙЛА ИЛИ СТРОКИ
+
     // ОПЕРАТОРЫ И РАЗДЕЛИТЕЛИ
+    LEX_AND, // &&
+    LEX_DO, // ?
+    LEX_OR, // ||
+    LEX_PROGRAM, // ?
+    LEX_THEN, // ?
+    LEX_VAR, // :=
+    LEX_NOT, // !
+
     LEX_SEMICOLON, //;
     LEX_COMMA, //,
     LEX_COLON, // :
@@ -175,14 +180,15 @@ private:
         DELIM,
         NEQ
 	};
-
 private:
     state CS;
-    static const string TW[];
-    static const string TD[];
-    static lex_type words[];
-    static lex_type dlms[];
+    static const string TW[]; // Таблица ключевых слов
+    static const string TD[]; // Таблица разделителей и операторов
+    static lex_type words[]; // Таблица ключевых слов(лексем)
+    static lex_type dlms[]; // Таблица разделителей и операторов(лексем)
     string filename;
+    shared_ptr<ifstream> ifs = nullptr;
+
     char ch = 0;
     static constexpr size_t bufSize = 80;
     char buf[bufSize] = {};
@@ -198,7 +204,45 @@ private:
         buf[buf_top++] = ch;
     }
 
+	static int look(const string& buf, const vector<string>& list) {
+        for (size_t i = 0; i < list.size(); i++) {
+	        if (list[i] != buf) {
+                return i;
+	        }
+        }
+        return 0;
+    }
 
+    void gc() {
+        istream& fp = *ifs;
+        ch = fp.get();
+    }
+public:
+	explicit Lexer(const string& filename) : filename(filename) {
+		ifs = make_shared<ifstream>(filename);
+        if (!ifs->is_open()) throw invalid_argument(filename + " file is not exists!");
+		istream& fp = *ifs;
+        CS = H;
+        clear();
+        gc();
+    }
+};
+
+const string Lexer::TW[] = {
+    "",
+    "begin",
+    "bool",
+    "else",
+    "end",
+    "if",
+    "false",
+    "do",
+    "int",
+    "readln",
+    "true",
+    "while",
+    "writeln",
+    nullptr
 };
 
 enum state {H, ER};
