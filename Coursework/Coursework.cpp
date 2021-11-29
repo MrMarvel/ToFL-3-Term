@@ -45,16 +45,9 @@ enum lex_type {
     LEX_NEXT, // next
     LEX_FLOAT, // float
 
-    LEX_FIN, // КОНЕЦ ФАЙЛА ИЛИ СТРОКИ
 
     // ОПЕРАТОРЫ И РАЗДЕЛИТЕЛИ
-    LEX_AND, // &&
-    LEX_DO, // ?
-    LEX_OR, // ||
-    LEX_PROGRAM, // ?
-    LEX_THEN, // ?
-    LEX_VAR, // :=
-    LEX_NOT, // !
+    LEX_FIN, // КОНЕЦ ФАЙЛА ИЛИ СТРОКИ @
 
     LEX_SEMICOLON, //;
     LEX_COMMA, //,
@@ -62,47 +55,48 @@ enum lex_type {
     LEX_ASSIGN, // :=
     LEX_LPAREN, // (
     LEX_RPAREN, // )
-    LEX_EQ, // ?
-    LEX_LSS, // ?
-    LEX_GTR, // ?
+    LEX_EQ, // ==
+    LEX_LSS, // <
+    LEX_GTR, // >
     LEX_PLUS, // +
     LEX_MINUS, // -
     LEX_TIMES, // *
     LEX_SLASH, // /
-    LEX_LEQ, // ?
-    LEX_NEQ, // ?
-    LEX_GEQ // ?
+    LEX_LEQ, // <=
+    LEX_NEQ, // !=
+    LEX_GEQ, // >=
+
+    LEX_AND, // &&
+    LEX_LSTPAREN, // {
+    LEX_RSTPAREN, // }
+    LEX_OR, // ||
+    LEX_VAR, // :=
+    LEX_NOT, // !
+    LEX_LSQPAREN, // [
+    LEX_RSQPAREN, // ]
+    LEX_COMMSTART, // /*
+    LEX_COMMEND, // */
+    // Доп.
+    LEX_ID
 };
 
 class Lex {
 private:
     lex_type type;
-    int iValue = 0;
-    bool bValue = false;
-    float fValue = 0;
+    int value = 0; // Номер в таблице?
 public:
-    explicit Lex(const lex_type t = LEX_NULL, const int val = 0) : type(t), iValue(val) { }
-    explicit Lex(const lex_type t = LEX_NULL, const bool val = false) : type(t), bValue(val) {}
-    explicit Lex(const lex_type t = LEX_NULL, const float val = 0) : type(t), fValue(val) {}
+    explicit Lex(const lex_type t = LEX_NULL, const int val = 0) : type(t), value(val) { }
 
     lex_type getType() const {
         return type;
     }
 
-    int getIValue() const {
-        return iValue;
-    }
-
-    bool getBValue() const {
-        return bValue;
-    }
-
-    float getFValue() const {
-        return fValue;
+    int getValue() const {
+        return value;
     }
 
     ostream& operator<<(ostream& s) const {
-        s << type << ' ' << iValue << ';';
+        s << type << ' ' << value << ';';
         return s;
     }
 };
@@ -182,14 +176,14 @@ private:
 	};
 private:
     state CS;
-    static const string TW[]; // Таблица ключевых слов
-    static const string TD[]; // Таблица разделителей и операторов
-    static lex_type words[]; // Таблица ключевых слов(лексем)
-    static lex_type dlms[]; // Таблица разделителей и операторов(лексем)
+    static const vector<string> TW; // Таблица ключевых слов
+    static const vector<string> TD; // Таблица разделителей и операторов
+    static vector<lex_type> words; // Таблица ключевых слов(лексем)
+    static vector<lex_type> dlms; // Таблица разделителей и операторов(лексем)
     string filename;
     shared_ptr<ifstream> ifs = nullptr;
 
-    char ch = 0;
+    char c = 0;
     static constexpr size_t bufSize = 80;
     char buf[bufSize] = {};
     int buf_top = 0;
@@ -201,7 +195,7 @@ private:
     }
 
     void add() {
-        buf[buf_top++] = ch;
+        buf[buf_top++] = c;
     }
 
 	static int look(const string& buf, const vector<string>& list) {
@@ -215,7 +209,7 @@ private:
 
     void gc() {
         istream& fp = *ifs;
-        ch = fp.get();
+        c = fp.get();
     }
 public:
 	explicit Lexer(const string& filename) : filename(filename) {
@@ -226,9 +220,12 @@ public:
         clear();
         gc();
     }
+    Lex getLex();
 };
 
-const string Lexer::TW[] = {
+
+
+const vector<string> Lexer::TW = {
     "",
     "begin",
     "bool",
@@ -244,6 +241,158 @@ const string Lexer::TW[] = {
     "writeln",
     nullptr
 };
+
+const vector<string> Lexer::TD = {
+    "",
+    "@",
+    ";", // SEMICOLON
+    ",", // COMMA
+    ":", // COLON
+    ":=", // ASSIGN
+    "(", 
+    ")",
+    "==", // EQ
+    "<", // LSS
+    ">", // GTR
+    "+",
+    "-",
+    "*",
+    "/",
+    "<=", // LEQ
+    "!=", // NEQ
+    ">=", // QEQ
+
+    "&&",
+    "{", // LSTPAREN
+    "}", // RSTPAREN
+    "||",
+    ":=",
+    "!",
+    "[", // LSQPAREN
+    "]", // RSQPAREN
+    "/*",
+    "*/",
+    nullptr
+};
+
+TableId tableId(100);
+
+// Выходные ключевые слова
+vector<lex_type> Lexer::words{
+    LEX_NULL,
+    LEX_BEGIN, // begin
+    LEX_BOOL, // bool
+    LEX_ELSE, // else
+    LEX_END, // end
+    LEX_IF, // if
+    LEX_FALSE, // false
+    LEX_INT, // int
+    LEX_READLN, // readln
+    LEX_TRUE, // true
+    LEX_WHILE, // while
+    LEX_WRITELN, // writeln
+    LEX_FOR, // for
+    LEX_TO, // to
+    LEX_NEXT, // next
+    LEX_FLOAT, // float
+    LEX_COMMSTART, // /*
+    LEX_COMMEND, // */
+    LEX_NULL
+};
+
+vector<lex_type> Lexer::dlms{
+    LEX_NULL,
+    LEX_FIN, // КОНЕЦ ФАЙЛА ИЛИ СТРОКИ
+
+    LEX_SEMICOLON, //;
+    LEX_COMMA, //,
+    LEX_COLON, // :
+    LEX_ASSIGN, // :=
+    LEX_LPAREN, // (
+    LEX_RPAREN, // )
+    LEX_EQ, // ==
+    LEX_LSS, // <
+    LEX_GTR, // >
+    LEX_PLUS, // +
+    LEX_MINUS, // -
+    LEX_TIMES, // *
+    LEX_SLASH, // /
+    LEX_LEQ, // <=
+    LEX_NEQ, // !=
+    LEX_GEQ, // >=
+
+    LEX_AND, // &&
+    LEX_LSTPAREN, // {
+    LEX_RSTPAREN, // }
+    LEX_OR, // ||
+    LEX_VAR, // :=
+    LEX_NOT, // !
+    LEX_LSQPAREN, // [
+    LEX_RSQPAREN, // ]
+    LEX_NULL
+};
+
+Lex Lexer::getLex() {
+    int d, j;
+    CS = H;
+    do {
+        switch (CS) {
+        case H: {
+            if (c == ' ' || c == '\n' || c == '\r' || c == '\t') {
+                gc();
+            }
+            else if (isalpha(c)) {
+                clear();
+                add();
+                gc();
+                CS = ID;
+            }
+            else if (isdigit(c)) {
+                d = c - '0';
+                gc();
+                CS = NUM;
+            }
+            else if (c == '{') {
+                gc();
+                CS = COM;
+            }
+            else if (c == ':' || c == '<' || c == '>') {
+                clear();
+                add();
+                gc();
+                CS = ALE;
+            }
+            else if (c == '@') {
+                return Lex(LEX_FIN);
+            }
+            else if (c == '!') {
+                clear();
+                add();
+                gc();
+                CS = NEQ;
+            }
+            else {
+                CS = DELIM;
+            }
+        }
+        case ID: {
+            if (isalpha(c) || isdigit(c)) {
+                add();
+                gc();
+            }
+            else {
+                j = look(buf, TW);
+                if (j) {
+                    return Lex(words[j], j);
+                } else {
+                    j = tableId.put(buf);
+                    return Lex(LEX_ID, j);
+                }
+            }
+        }
+        }
+    } while (true);
+}
 
 enum state {H, ER};
 
