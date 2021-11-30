@@ -1,6 +1,6 @@
 ﻿// Coursework.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
 //
-
+/*
 #include <iostream>
 #include <deque>
 #include <fstream>
@@ -74,8 +74,8 @@ enum lex_type {
     LEX_NOT, // !
     LEX_LSQPAREN, // [
     LEX_RSQPAREN, // ]
-    LEX_COMMSTART, // /*
-    LEX_COMMEND, // */
+    LEX_COMMSTART, // / *
+    LEX_COMMEND, // * /
     // Доп.
     LEX_ID
 };
@@ -271,7 +271,7 @@ const vector<string> Lexer::TD = {
     "[", // LSQPAREN
     "]", // RSQPAREN
     "/*",
-    "*/",
+    "* /",
     nullptr
 };
 
@@ -296,7 +296,7 @@ vector<lex_type> Lexer::words{
     LEX_NEXT, // next
     LEX_FLOAT, // float
     LEX_COMMSTART, // /*
-    LEX_COMMEND, // */
+    LEX_COMMEND, // * /
     LEX_NULL
 };
 
@@ -393,12 +393,14 @@ Lex Lexer::getLex() {
         }
     } while (true);
 }
-
+*/
+/*
 enum state {H, ER};
 
 wchar_t gc();
+*/
 
-bool scanner() {
+/*bool scanner() {
     sost CS; gc(); CS = H;
     do {
         switch (CS) {
@@ -532,3 +534,4 @@ bool scanner() {
     } while (CS != V && CS != ER);
     return CS;
 }
+*/

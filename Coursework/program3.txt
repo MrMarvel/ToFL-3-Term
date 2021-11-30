@@ -1,0 +1,5 @@
+{
+int a;
+readln a;
+if (a > 5) writeln a;
+}
