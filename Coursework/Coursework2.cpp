@@ -2,20 +2,33 @@
 #include <fstream>
 #include <sstream>
 #include <unordered_map>
-#include <cstdlib>
+#include <stack>
 
 using namespace std;
 
 class compiler {
 private:
-	ifstream f;
-	fstream f1;
+	ifstream cIn;
+	fstream lIn;
 	char CH = ' ';
-	string BUFFER = "";
-	int z = 0;
+	string BUFFER, LEX;
+	int lexNum = 0;
 	bool first = 0;
 
-	string LEX = "";
+	stack <int> TI_STACK;
+	stack <string> TYPE_STACK;
+
+	//ќписание переменной
+	struct Var {
+		bool isdescr = 0;
+		string type = "";
+		string addres = "";
+	};
+
+	//ќписание числа
+	struct Num {
+		string type = "";
+		string addres = "";
 
 	unordered_map <string, int> TW = {
 		{"readln", 1}, {"writeln", 2}, {"if", 3}, {"else", 4}, {"for", 5}, {"to", 6}, {"while", 7},
@@ -29,6 +42,20 @@ private:
 	};
 	unordered_map <string, int> TN = {};
 	unordered_map <string, int> TI = {};
+	unordered_map <string, shared_ptr<Var>> TI_SEM = {};
+	unordered_map <string, shared_ptr<Num>> TN_SEM = {};
+	unordered_map <string, string> table_sem = { {"%+%","%"}, {"%-%","%"}, {"%/%","!"}, {"%*%","%"},
+												 {"%+!","!"}, {"%-!","!"}, {"%/!","!"}, {"%*!","!"},
+												 {"!+%","!"}, {"!-%","!"}, {"!/%","!"}, {"!*%","!"},
+												 {"!+!","!"}, {"!-!","!"}, {"!/!","!"}, {"!*!","!"},
+												 {"%>%","$"}, {"%<%","$"}, {"%>=%","$"}, {"%<=%","$"},
+												 {"%>!","$"}, {"%<!","$"}, {"%>=!","$"}, {"%<=!","$"},
+												 {"!>%","$"}, {"!<%","$"}, {"!>=%","$"}, {"!<=%","$"},
+												 {"!>!","$"}, {"!<!","$"}, {"!>=!","$"}, {"!<=!","$"},
+												 {"%==%","$"}, {"!==!","$"}, {"!==%","$"}, {"%==!","$"},
+												 {"%!=%","$"}, {"%!=!","$"}, {"!!=%","$"}, {"!!=!","$"},
+												 {"$!=$","$"}, {"%==%","$"}, {"!==!","$"}, {"!==%","$"},
+												 {"%==!","$"}, {"$==$","$"}, {"$||$","$"}, {"$&&$","$"} };
 
 
 	/*
@@ -88,15 +115,15 @@ private:
 	E11 - символ ЂEї или Ђeї;
 	E12,E13, E22 Ц пор€док числа в экспоненциальной форме;
 	ZN, E21 Ц знак пор€дка числа в экспоненциальной форме;
-	
+
 	ќG Ц ограничитель;
 	V Ц выход;
 	ER Цошибка;
 	*/
 
 	int gc() {
-		f.get(CH);
-		if (CH != f.eof()) return 1;
+		cIn.get(CH);
+		if (CH != cIn.eof()) return 1;
 		else return 0;
 	}
 
@@ -109,19 +136,19 @@ private:
 	void add() { BUFFER += CH; }
 
 	int look(string t) {
-		if (table[t].find(BUFFER) == table[t].end()) z = 0;
-		else z = table[t][BUFFER];
-		return z;
+		if (table[t].find(BUFFER) == table[t].end()) lexNum = 0;
+		else lexNum = table[t][BUFFER];
+		return lexNum;
 	}
 
 	int put(string t) {
 		if (table[t].find(BUFFER) == table[t].end()) table[t][BUFFER] = table[t].size() + 1;
-		z = table[t][BUFFER];
-		return z;
+		lexNum = table[t][BUFFER];
+		return lexNum;
 	}
 
 	void out(int n, int k) {
-		f1 << "(" << n << ", " << k << ")\n";
+		lIn << "(" << n << ", " << k << ")\n";
 	}
 
 	bool check_hex() { return isxdigit(CH); }
@@ -179,8 +206,8 @@ private:
 public:
 
 	bool lexer(const string& filename) {
-		f.open(filename);
-		f1.open("lex."+filename, ios::out | ios::in | ios::trunc);
+		cIn.open(filename);
+		lIn.open("lex." + filename, ios::out | ios::in | ios::trunc);
 		states_ STATE;
 		gc();
 		STATE = H;
@@ -188,8 +215,8 @@ public:
 		do {
 			switch (STATE) {
 			case H: {
-				while ((CH == ' ' || CH == '\n' || CH == '\t' || CH == '\b') && !f.eof()) gc();
-				if (f.eof()) STATE = ER;
+				while ((CH == ' ' || CH == '\n' || CH == '\t' || CH == '\b') && !cIn.eof()) gc();
+				if (cIn.eof()) STATE = ER;
 				if (let()) {
 					nill();
 					add();
@@ -215,8 +242,8 @@ public:
 			case I:
 				while (let() || digit()) { add(); gc(); }
 				look("TW");
-				if (z != 0) { out(1, z); STATE = H; }
-				else { put("TI"); out(4, z); STATE = H; }
+				if (lexNum != 0) { out(1, lexNum); STATE = H; }
+				else { put("TI"); out(4, lexNum); STATE = H; }
 				break;
 			case N2:
 				while (CH == '0' || CH == '1') { add(); gc(); }
@@ -252,7 +279,7 @@ public:
 				else if (CH == '.') { add(); gc(); STATE = P1; }
 				else if (CH == 'D' || CH == 'd') { add(); gc(); STATE = D; }
 				else if (let()) STATE = ER;
-				else { put("TN"); out(3, z); STATE = H; }
+				else { put("TN"); out(3, lexNum); STATE = H; }
 				break;
 			case N16:
 				while (check_hex()) { add(); gc(); }
@@ -263,21 +290,21 @@ public:
 				if (check_hex()) STATE = N16;
 				else if (CH == 'H' || CH == 'h') { gc(); STATE = HX; }
 				else if (let()) STATE = ER;
-				else { translate(2); put("TN"); out(3, z); STATE = H; }
+				else { translate(2); put("TN"); out(3, lexNum); STATE = H; }
 				break;
 			case O:
 				if (let() || digit()) STATE = ER;
-				else { translate(8); put("TN"); out(3, z); STATE = H; }
+				else { translate(8); put("TN"); out(3, lexNum); STATE = H; }
 				break;
 			case D:
 				if (CH == 'H' || CH == 'h') { gc(); STATE = HX; }
 				else if (check_hex()) STATE = N16;
 				else if (let()) STATE = ER;
-				else { put("TN"); out(3, z); STATE = H; }
+				else { put("TN"); out(3, lexNum); STATE = H; }
 				break;
 			case HX:
 				if (let() || digit())STATE = ER;
-				else { translate(16); put("TN"); out(3, z); STATE = H; }
+				else { translate(16); put("TN"); out(3, lexNum); STATE = H; }
 				break;
 			case E11:
 				if (digit()) { add(); gc(); STATE = E12; }
@@ -295,12 +322,12 @@ public:
 				if (check_hex()) STATE = N16;
 				else if (CH == 'H' || CH == 'h') { gc(); STATE = HX; }
 				else if (let()) STATE = ER;
-				else { convert(); put("TN"); out(3, z); STATE = H; }
+				else { convert(); put("TN"); out(3, lexNum); STATE = H; }
 				break;
 			case E13:
 				while (digit()) { add(); gc(); }
 				if (let() || CH == '.') STATE = ER;
-				else { convert(); put("TN"); out(3, z); STATE = H; }
+				else { convert(); put("TN"); out(3, lexNum); STATE = H; }
 				break;
 			case P1:
 				if (digit()) STATE = P2; else STATE = ER;
@@ -309,7 +336,7 @@ public:
 				while (digit()) { add(); gc(); }
 				if (CH == 'E' || CH == 'e') { add(); gc(); STATE = E21; }
 				else if (let() || CH == '.') STATE = ER;
-				else { convert(); put("TN"); out(3, z); STATE = H; }
+				else { convert(); put("TN"); out(3, lexNum); STATE = H; }
 				break;
 			case E21:
 				if (CH == '+' || CH == '-') { add(); gc(); STATE = ZN; }
@@ -319,7 +346,7 @@ public:
 			case E22:
 				while (digit()) { add(); gc(); }
 				if (let() || CH == '.') STATE = ER;
-				else { convert(); put("TN"); out(3, z); STATE = H; }
+				else { convert(); put("TN"); out(3, lexNum); STATE = H; }
 				break;
 			case C1:
 				if (CH == '*') { gc(); STATE = C2; }
@@ -368,18 +395,18 @@ public:
 				nill();
 				add();
 				look("TL");
-				if (z != 0) {
+				if (lexNum != 0) {
 					gc();
-					out(2, z);
+					out(2, lexNum);
 					STATE = H;
 				}
 				else STATE = ER;
 				break;
 			}
 		} while (STATE != V && STATE != ER);
-		if (STATE == ER) f1 << "Ќе распознанна€ лексема \"" << CH << "\"\n";
-		f1.close();
-		f.close();
+		if (STATE == ER) lIn << "Ќе распознанна€ лексема \"" << CH << "\"\n";
+		lIn.close();
+		cIn.close();
 		return STATE;
 	}
 	bool syntax(const string& filename) {
@@ -388,12 +415,12 @@ public:
 	}
 };
 
-int main31321() {
+int main() {
 	compiler comp;
 	string filename = "mprogram.txt";
 	if (comp.lexer(filename)) {
 		if (comp.syntax(filename)) {
-			
+
 		}
 	}
 }

@@ -5,7 +5,7 @@ arr : float;
 readln i, j;
 
 for i:=1 to 5 [step 1] begin
-  for j:=1 to 5 [step 2] begin
+  for j:=1 to 5 [step 2] begin/*hen vi na*/
     arr := (i / j) + 1
     if ((arr < 3) && (j == 1)) writeln(arr);
   end next
