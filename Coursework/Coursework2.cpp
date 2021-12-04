@@ -11,7 +11,7 @@ private:
 	ifstream cIn;
 	fstream lIn;
 	char CH = ' ';
-	string BUFFER, LEX;
+	string BUFFER = "", LEX = "";
 	int lexNum = 0;
 	bool first = 0;
 
@@ -20,15 +20,16 @@ private:
 
 	//ќписание переменной
 	struct Var {
-		bool isdescr = 0;
-		string type = "";
-		string addres = "";
+		bool isDeclared = false;
+		string type;
+		string address;
 	};
 
 	//ќписание числа
 	struct Num {
-		string type = "";
-		string addres = "";
+		string type;
+		string address;
+	};
 
 	unordered_map <string, int> TW = {
 		{"readln", 1}, {"writeln", 2}, {"if", 3}, {"else", 4}, {"for", 5}, {"to", 6}, {"while", 7},
@@ -102,7 +103,7 @@ private:
 	M1 Ц меньше, меньше или равно;
 	M2 Ц больше, больше или равно;
 	M3 Ц не равно;
-	SET Ц присваивание;
+	M4 Ц присваивание;
 	M5 Ц равно;
 	B1 Ц логическое »;
 	B2 Ц логическое »Ћ»;
@@ -111,7 +112,7 @@ private:
 	B Ц символ ЂBї или Ђbї;
 	O Ц символ ЂOї или Ђoї;
 	D Ц символ ЂDї или Ђdї;
-	HX Ц символ ЂPROGї или Ђhї;
+	HX Ц символ ЂHї или Ђhї;
 	E11 - символ ЂEї или Ђeї;
 	E12,E13, E22 Ц пор€док числа в экспоненциальной форме;
 	ZN, E21 Ц знак пор€дка числа в экспоненциальной форме;

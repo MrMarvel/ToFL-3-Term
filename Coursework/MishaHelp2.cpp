@@ -20,9 +20,9 @@ private:
 
 	//Описание переменной
 	struct Var {
-		bool isdescr = 0;
+		bool isDeclared = 0;
 		string type = "";
-		string addres = "";
+		string address = "";
 	};
 
 	//Описание числа
@@ -330,7 +330,7 @@ private:
 		while (curr != 0) {
 			for (auto it : table["TI"])
 				if (it.second == curr) { lex = it.first; break; }
-			if (TI_SEM[lex]->isdescr) err_proc(1, lex);
+			if (TI_SEM[lex]->isDeclared) err_proc(1, lex);
 			else TI_SEM[lex] = new Var({ 1, type, "0x000000" });
 			curr = TI_STACK.top();
 			TI_STACK.pop();
@@ -339,7 +339,7 @@ private:
 
 	//Проверка идентификатора на существование (если не объявили будет ошибка)
 	void checkid() {
-		if (!TI_SEM[LEX]->isdescr) err_proc(1, LEX);
+		if (!TI_SEM[LEX]->isDeclared) err_proc(1, LEX);
 		else to_stack(TI_SEM[LEX]->type);
 	}
 
@@ -859,4 +859,5 @@ int main2()
 	compiler l;
 	l.lexer();
 	l.syntax_sem();
+	return 0;
 }
