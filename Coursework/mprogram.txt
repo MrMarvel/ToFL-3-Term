@@ -1,6 +1,6 @@
 {
-i, j : int;
-arr : float;
+int i, j;
+float arr;
 
 readln i, j;
 
@@ -9,5 +9,5 @@ for i:=1 to 5 [step 1] begin
     arr := (i / j) + 1
     if ((arr < 3) && (j == 1)) writeln(arr);
   end next
-end next
+end next;
 }

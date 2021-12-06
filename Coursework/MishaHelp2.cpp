@@ -19,14 +19,14 @@ private:
 	stack <string> TYPE_STACK;
 
 	//Описание переменной
-	struct Var {
-		bool isDeclared = 0;
+	struct descr_id {
+		bool isdescr = 0;
 		string type = "";
-		string address = "";
+		string addres = "";
 	};
 
 	//Описание числа
-	struct Num {
+	struct descr_num {
 		string type = "";
 		string addres = "";
 	};
@@ -49,8 +49,8 @@ private:
 									   {":=", 18},  {"==", 19},  {"<", 20},  {"<=", 21},  {">", 22},  {">=", 23}, {"/*", 24}, {"*/", 25}, };
 	unordered_map <string, int> TN = {};
 	unordered_map <string, int> TI = {};
-	unordered_map <string, Var*> TI_SEM = {};
-	unordered_map <string, Num*> TN_SEM = {};
+	unordered_map <string, descr_id*> TI_SEM = {};
+	unordered_map <string, descr_num*> TN_SEM = {};
 	unordered_map <string, string> table_sem = { {"%+%","%"}, {"%-%","%"}, {"%/%","!"}, {"%*%","%"},
 												 {"%+!","!"}, {"%-!","!"}, {"%/!","!"}, {"%*!","!"},
 												 {"!+%","!"}, {"!-%","!"}, {"!/%","!"}, {"!*%","!"},
@@ -131,8 +131,8 @@ private:
 
 	//Добавление лексемы в таблицу
 	int put(string t, string type = "") {
-		if (t == "TN") TN_SEM[buff] = new Num({ type, "" });
-		if (t == "TI") TI_SEM[buff] = new Var({ 0, "", "" });
+		if (t == "TN") TN_SEM[buff] = new descr_num({ type, "" });
+		if (t == "TI") TI_SEM[buff] = new descr_id({ 0, "", "" });
 		if (table[t].find(buff) == table[t].end()) table[t][buff] = table[t].size() + 1;
 		lex_num = table[t][buff];
 		return lex_num;
@@ -154,8 +154,7 @@ private:
 		int i = 0, rem = 0, number = 0, result = 0;
 		stringstream stream;
 
-		switch (base)
-		{
+		switch (base) {
 		case 2:
 			stream << buff;
 			stream >> number;
@@ -170,8 +169,7 @@ private:
 		case 8:
 			stream << buff;
 			stream >> number;
-			while (number != 0)
-			{
+			while (number != 0) {
 				rem = number % 10;
 				number /= 10;
 				result += rem * pow(8, i);
@@ -330,8 +328,8 @@ private:
 		while (curr != 0) {
 			for (auto it : table["TI"])
 				if (it.second == curr) { lex = it.first; break; }
-			if (TI_SEM[lex]->isDeclared) err_proc(1, lex);
-			else TI_SEM[lex] = new Var({ 1, type, "0x000000" });
+			if (TI_SEM[lex]->isdescr) err_proc(1, lex);
+			else TI_SEM[lex] = new descr_id({ 1, type, "0x000000" });
 			curr = TI_STACK.top();
 			TI_STACK.pop();
 		}
@@ -339,7 +337,7 @@ private:
 
 	//Проверка идентификатора на существование (если не объявили будет ошибка)
 	void checkid() {
-		if (!TI_SEM[LEX]->isDeclared) err_proc(1, LEX);
+		if (!TI_SEM[LEX]->isdescr) err_proc(1, LEX);
 		else to_stack(TI_SEM[LEX]->type);
 	}
 
@@ -388,8 +386,7 @@ private:
 			get_lexem();
 			BODY();
 			if (equal_lex("}") == 0) err_proc(4);
-		}
-		else err_proc(5);
+		} else err_proc(5);
 	}
 
 	void BODY() {
@@ -398,13 +395,11 @@ private:
 			if (equal_lex(":")) {
 				get_lexem();
 				DESCR();
-			}
-			else {
+			} else {
 				while (!TI_STACK.empty()) TI_STACK.pop();
 				OPER();
 			}
-		}
-		else if (equal_lex("if") || equal_lex("begin") || equal_lex("while") || equal_lex("for") || equal_lex("readln") || equal_lex("writeln")) OPER();
+		} else if (equal_lex("if") || equal_lex("begin") || equal_lex("while") || equal_lex("for") || equal_lex("readln") || equal_lex("writeln")) OPER();
 		else err_proc(6);
 
 		while (equal_lex(";")) {
@@ -413,13 +408,11 @@ private:
 				if (equal_lex(":")) {
 					get_lexem();
 					DESCR();
-				}
-				else {
+				} else {
 					while (!TI_STACK.empty()) TI_STACK.pop();
 					OPER();
 				}
-			}
-			else if (equal_lex("if") || equal_lex("begin") || equal_lex("while") || equal_lex("for") || equal_lex("readln") || equal_lex("writeln")) OPER();
+			} else if (equal_lex("if") || equal_lex("begin") || equal_lex("while") || equal_lex("for") || equal_lex("readln") || equal_lex("writeln")) OPER();
 			else if (equal_lex("}")) return;
 			else err_proc(6);
 		}
@@ -427,10 +420,7 @@ private:
 	}
 
 	void DESCR() {
-		if (equal_lex("%")) { set_descr("%"); }
-		else if (equal_lex("!")) { set_descr("!"); }
-		else if (equal_lex("$")) { set_descr("$"); }
-		else err_proc(8);
+		if (equal_lex("%")) { set_descr("%"); } else if (equal_lex("!")) { set_descr("!"); } else if (equal_lex("$")) { set_descr("$"); } else err_proc(8);
 		get_lexem();
 	}
 
@@ -446,13 +436,11 @@ private:
 				if (is_ID()) {
 					to_stack();
 					get_lexem();
-				}
-				else err_proc(9);
+				} else err_proc(9);
 			}
 			if (descr)
 				while (!TI_STACK.empty()) TI_STACK.pop();
-		}
-		else {
+		} else {
 			TI_STACK.pop();
 			return 0;
 		}
@@ -460,22 +448,16 @@ private:
 	}
 
 	void FACT() {
-		if (is_ID()) { checkid(); get_lexem(); }
-		else if (is_NUM()) { to_stack(TN_SEM[LEX]->type); get_lexem(); }
-		else if (equal_lex("true")) { to_stack("$"); get_lexem(); }
-		else if (equal_lex("false")) { to_stack("$"); get_lexem(); }
-		else if (equal_lex("!")) {
+		if (is_ID()) { checkid(); get_lexem(); } else if (is_NUM()) { to_stack(TN_SEM[LEX]->type); get_lexem(); } else if (equal_lex("true")) { to_stack("$"); get_lexem(); } else if (equal_lex("false")) { to_stack("$"); get_lexem(); } else if (equal_lex("!")) {
 			get_lexem();
 			FACT();
 			check_not();
-		}
-		else if (equal_lex("(")) {
+		} else if (equal_lex("(")) {
 			get_lexem();
 			COMPARE();
 			if (equal_lex(")")) get_lexem();
 			else err_proc(10);
-		}
-		else err_proc(11);
+		} else err_proc(11);
 	}
 
 	void MULT() {
@@ -526,8 +508,7 @@ private:
 				get_lexem();
 				COMPARE();
 				eqtype();
-			}
-			else err_proc(13);
+			} else err_proc(13);
 		}
 
 		else if (equal_lex("readln")) {
@@ -545,8 +526,7 @@ private:
 				get_lexem();
 				COMPARE();
 				eqbool();
-			}
-			else err_proc(14);
+			} else err_proc(14);
 
 			if (!equal_lex(")")) err_proc(10);
 			else get_lexem();
@@ -560,8 +540,7 @@ private:
 				get_lexem();
 				COMPARE();
 				eqbool();
-			}
-			else err_proc(14);
+			} else err_proc(14);
 
 			if (!equal_lex(")")) err_proc(10);
 			else get_lexem();
@@ -570,8 +549,7 @@ private:
 			if (equal_lex("else")) {
 				get_lexem();
 				OPER();
-			}
-			else return;
+			} else return;
 		}
 
 		else if (equal_lex("for")) {
@@ -583,16 +561,14 @@ private:
 					get_lexem();
 					COMPARE();
 					eqtype();
-				}
-				else err_proc(16);
+				} else err_proc(16);
 
 				if (equal_lex("to")) {
 					get_lexem();
 					COMPARE();
 					if (TYPE_STACK.top() != "%") err_proc(3, TYPE_STACK.top());
 					TYPE_STACK.pop();
-				}
-				else err_proc(15);
+				} else err_proc(15);
 
 				if (equal_lex("step")) {
 					get_lexem();
@@ -605,8 +581,7 @@ private:
 					OPER();
 					if (!equal_lex("next")) err_proc(16);
 					else get_lexem();
-				}
-				else err_proc(6, LEX);
+				} else err_proc(6, LEX);
 			}
 		}
 
@@ -614,8 +589,7 @@ private:
 			get_lexem();
 			COMPARE();
 			eqtype();
-		}
-		else err_proc(6, LEX);
+		} else err_proc(6, LEX);
 	}
 
 	void EXPR() {
@@ -627,11 +601,9 @@ private:
 				if (COMPARE()) {
 					TYPE_STACK.pop();
 					get_lexem();
-				}
-				else err_proc(17);
+				} else err_proc(17);
 			}
-		}
-		else err_proc(17);
+		} else err_proc(17);
 	}
 
 	void OPER1() {
@@ -662,73 +634,42 @@ public:
 					add();
 					get_char_lex();
 					STATE = I;
-				}
-				else if (CH == '0' || CH == '1') { null(); STATE = N2; add(); get_char_lex(); }
-				else if (CH >= '2' && CH <= '7') { null(); STATE = N8; add(); get_char_lex(); }
-				else if (CH >= '8' && CH <= '9') { null(); STATE = N10; add(); get_char_lex(); }
-				else if (CH == '.') { null(); add(); get_char_lex(); STATE = P1; }
-				else if (CH == '/') { get_char_lex(); STATE = C1; }
-				else if (CH == '<') { get_char_lex(); STATE = M1; }
-				else if (CH == '>') { get_char_lex(); STATE = M2; }
-				else if (CH == '!') { get_char_lex(); STATE = M3; }
-				else if (CH == ':') { get_char_lex(); STATE = M4; }
-				else if (CH == '=') { get_char_lex(); STATE = M5; }
-				else if (CH == '|') { get_char_lex(); STATE = B1; }
-				else if (CH == '&') { get_char_lex(); STATE = B2; }
-				else if (CH == '}') { out(2, 2); STATE = V; }
-				else STATE = OG;
+				} else if (CH == '0' || CH == '1') { null(); STATE = N2; add(); get_char_lex(); } else if (CH >= '2' && CH <= '7') { null(); STATE = N8; add(); get_char_lex(); } else if (CH >= '8' && CH <= '9') { null(); STATE = N10; add(); get_char_lex(); } else if (CH == '.') { null(); add(); get_char_lex(); STATE = P1; } else if (CH == '/') { get_char_lex(); STATE = C1; } else if (CH == '<') { get_char_lex(); STATE = M1; } else if (CH == '>') { get_char_lex(); STATE = M2; } else if (CH == '!') { get_char_lex(); STATE = M3; } else if (CH == ':') { get_char_lex(); STATE = M4; } else if (CH == '=') { get_char_lex(); STATE = M5; } else if (CH == '|') { get_char_lex(); STATE = B1; } else if (CH == '&') { get_char_lex(); STATE = B2; } else if (CH == '}') { out(2, 2); STATE = V; } else STATE = OG;
 				break;
 			case I:
 				while (alpha() || digit()) { add(); get_char_lex(); }
 				check_lexem("TW");
-				if (lex_num != 0) { out(1, lex_num); STATE = H; }
-				else { put("TI"); out(4, lex_num); STATE = H; }
+				if (lex_num != 0) { out(1, lex_num); STATE = H; } else { put("TI"); out(4, lex_num); STATE = H; }
 				break;
 			case N2:
 				while (CH == '0' || CH == '1') { add(); get_char_lex(); }
 				if (CH >= '2' && CH <= '7') STATE = N8;
 				else if (CH == '8' || CH == '9') STATE = N10;
 				else if (CH == 'A' || CH == 'a' || CH == 'C' || CH == 'c' || CH == 'F' || CH == 'f') STATE = N16;
-				else if (CH == 'E' || CH == 'e') { add(); get_char_lex(); STATE = E11; }
-				else if (CH == 'D' || CH == 'd') { add(); get_char_lex(); STATE = D; }
-				else if (CH == 'O' || CH == 'o') STATE = O;
-				else if (CH == 'H' || CH == 'h') { get_char_lex(); STATE = HX; }
-				else if (CH == '.') { add(); get_char_lex(); STATE = P1; }
-				else if (CH == 'B' || CH == 'b') { add(); get_char_lex(); STATE = B; }
-				else if (alpha()) STATE = ER;
+				else if (CH == 'E' || CH == 'e') { add(); get_char_lex(); STATE = E11; } else if (CH == 'D' || CH == 'd') { add(); get_char_lex(); STATE = D; } else if (CH == 'O' || CH == 'o') STATE = O;
+				else if (CH == 'H' || CH == 'h') { get_char_lex(); STATE = HX; } else if (CH == '.') { add(); get_char_lex(); STATE = P1; } else if (CH == 'B' || CH == 'b') { add(); get_char_lex(); STATE = B; } else if (alpha()) STATE = ER;
 				else STATE = N10;
 				break;
 			case N8:
 				while (CH >= '2' && CH <= '7') { add(); get_char_lex(); }
 				if (CH == '8' || CH == '9') STATE = N10;
 				else if (CH == 'A' || CH == 'a' || CH == 'B' || CH == 'b' || CH == 'C' || CH == 'c' || CH == 'F' || CH == 'f') STATE = N16;
-				else if (CH == 'E' || CH == 'e') { add(); get_char_lex(); STATE = E11; }
-				else if (CH == 'D' || CH == 'd') { add(); get_char_lex(); STATE = D; }
-				else if (CH == 'H' || CH == 'h') { get_char_lex(); STATE = HX; }
-				else if (CH == '.') { add(); get_char_lex(); STATE = P1; }
-				else if (CH == 'O' || CH == 'o') { get_char_lex(); STATE = O; }
-				else if (alpha()) STATE = ER;
+				else if (CH == 'E' || CH == 'e') { add(); get_char_lex(); STATE = E11; } else if (CH == 'D' || CH == 'd') { add(); get_char_lex(); STATE = D; } else if (CH == 'H' || CH == 'h') { get_char_lex(); STATE = HX; } else if (CH == '.') { add(); get_char_lex(); STATE = P1; } else if (CH == 'O' || CH == 'o') { get_char_lex(); STATE = O; } else if (alpha()) STATE = ER;
 				else STATE = N10;
 				break;
 			case N10:
 				while (CH == '8' || CH == '9') { add(); get_char_lex(); }
 				if (CH == 'A' || CH == 'a' || CH == 'B' || CH == 'b' || CH == 'C' || CH == 'c' || CH == 'F' || CH == 'f') STATE = N16;
-				else if (CH == 'E' || CH == 'e') { add(); get_char_lex(); STATE = E11; }
-				else if (CH == 'H' || CH == 'h') { get_char_lex(); STATE = HX; }
-				else if (CH == '.') { add(); get_char_lex(); STATE = P1; }
-				else if (CH == 'D' || CH == 'd') { add(); get_char_lex(); STATE = D; }
-				else if (alpha()) STATE = ER;
+				else if (CH == 'E' || CH == 'e') { add(); get_char_lex(); STATE = E11; } else if (CH == 'H' || CH == 'h') { get_char_lex(); STATE = HX; } else if (CH == '.') { add(); get_char_lex(); STATE = P1; } else if (CH == 'D' || CH == 'd') { add(); get_char_lex(); STATE = D; } else if (alpha()) STATE = ER;
 				else { put("TN", "%"); out(3, lex_num); STATE = H; }
 				break;
 			case N16:
 				while (check_hex()) { add(); get_char_lex(); }
-				if (CH == 'H' || CH == 'h') { get_char_lex(); STATE = HX; }
-				else STATE = ER;
+				if (CH == 'H' || CH == 'h') { get_char_lex(); STATE = HX; } else STATE = ER;
 				break;
 			case B:
 				if (check_hex()) STATE = N16;
-				else if (CH == 'H' || CH == 'h') { get_char_lex(); STATE = HX; }
-				else if (alpha()) STATE = ER;
+				else if (CH == 'H' || CH == 'h') { get_char_lex(); STATE = HX; } else if (alpha()) STATE = ER;
 				else { translate(2); put("TN", "%"); out(3, lex_num); STATE = H; }
 				break;
 			case O:
@@ -736,8 +677,7 @@ public:
 				else { translate(8); put("TN", "%"); out(3, lex_num); STATE = H; }
 				break;
 			case D:
-				if (CH == 'H' || CH == 'h') { get_char_lex(); STATE = HX; }
-				else if (check_hex()) STATE = N16;
+				if (CH == 'H' || CH == 'h') { get_char_lex(); STATE = HX; } else if (check_hex()) STATE = N16;
 				else if (alpha()) STATE = ER;
 				else { put("TN", "%"); out(3, lex_num); STATE = H; }
 				break;
@@ -746,21 +686,15 @@ public:
 				else { translate(16); put("TN", "%"); out(3, lex_num); STATE = H; }
 				break;
 			case E11:
-				if (digit()) { add(); get_char_lex(); STATE = E12; }
-				else if (CH == '+' || CH == '-') { add(); get_char_lex(); STATE = ZN; }
-				else if (CH == 'H' || CH == 'h') { get_char_lex(); STATE = HX; }
-				else if (check_hex()) { add(); get_char_lex(); STATE = N16; }
-				else STATE = ER;
+				if (digit()) { add(); get_char_lex(); STATE = E12; } else if (CH == '+' || CH == '-') { add(); get_char_lex(); STATE = ZN; } else if (CH == 'H' || CH == 'h') { get_char_lex(); STATE = HX; } else if (check_hex()) { add(); get_char_lex(); STATE = N16; } else STATE = ER;
 				break;
 			case ZN:
-				if (digit()) { add(); get_char_lex(); STATE = E13; }
-				else STATE = ER;
+				if (digit()) { add(); get_char_lex(); STATE = E13; } else STATE = ER;
 				break;
 			case E12:
 				while (digit()) { add(); get_char_lex(); }
 				if (check_hex()) STATE = N16;
-				else if (CH == 'H' || CH == 'h') { get_char_lex(); STATE = HX; }
-				else if (alpha()) STATE = ER;
+				else if (CH == 'H' || CH == 'h') { get_char_lex(); STATE = HX; } else if (alpha()) STATE = ER;
 				else { convert(); put("TN", "!"); out(3, lex_num); STATE = H; }
 				break;
 			case E13:
@@ -773,13 +707,11 @@ public:
 				break;
 			case P2:
 				while (digit()) { add(); get_char_lex(); }
-				if (CH == 'E' || CH == 'e') { add(); get_char_lex(); STATE = E21; }
-				else if (alpha() || CH == '.') STATE = ER;
+				if (CH == 'E' || CH == 'e') { add(); get_char_lex(); STATE = E21; } else if (alpha() || CH == '.') STATE = ER;
 				else { convert(); put("TN", "!"); out(3, lex_num); STATE = H; }
 				break;
 			case E21:
-				if (CH == '+' || CH == '-') { add(); get_char_lex(); STATE = ZN; }
-				else if (digit()) STATE = E22;
+				if (CH == '+' || CH == '-') { add(); get_char_lex(); STATE = ZN; } else if (digit()) STATE = E22;
 				else STATE = ER;
 				break;
 			case E22:
@@ -788,8 +720,7 @@ public:
 				else { convert(); put("TN", "!"); out(3, lex_num); STATE = H; }
 				break;
 			case C1:
-				if (CH == '*') { get_char_lex(); STATE = C2; }
-				else { out(2, 15); STATE = H; }
+				if (CH == '*') { get_char_lex(); STATE = C2; } else { out(2, 15); STATE = H; }
 				break;
 			case C2:
 				flag = 1;
@@ -798,36 +729,28 @@ public:
 				else { get_char_lex(); STATE = C3; }
 				break;
 			case C3:
-				if (CH == '/') { get_char_lex(); STATE = H; }
-				else STATE = C2;
+				if (CH == '/') { get_char_lex(); STATE = H; } else STATE = C2;
 				break;
 			case M1:
-				if (CH == '=') { get_char_lex(); out(2, 21); STATE = H; }
-				else { out(2, 20); STATE = H; }
+				if (CH == '=') { get_char_lex(); out(2, 21); STATE = H; } else { out(2, 20); STATE = H; }
 				break;
 			case M2:
-				if (CH == '=') { get_char_lex(); out(2, 23); STATE = H; }
-				else { out(2, 22); STATE = H; }
+				if (CH == '=') { get_char_lex(); out(2, 23); STATE = H; } else { out(2, 22); STATE = H; }
 				break;
 			case M3:
-				if (CH == '=') { get_char_lex(); out(2, 17); STATE = H; }
-				else { out(2, 4); STATE = H; }
+				if (CH == '=') { get_char_lex(); out(2, 17); STATE = H; } else { out(2, 4); STATE = H; }
 				break;
 			case M4:
-				if (CH == '=') { get_char_lex(); out(2, 18); STATE = H; }
-				else { out(2, 8); STATE = H; }
+				if (CH == '=') { get_char_lex(); out(2, 18); STATE = H; } else { out(2, 8); STATE = H; }
 				break;
 			case M5:
-				if (CH == '=') { get_char_lex(); out(2, 19); STATE = H; }
-				else { STATE = ER; }
+				if (CH == '=') { get_char_lex(); out(2, 19); STATE = H; } else { STATE = ER; }
 				break;
 			case B1:
-				if (CH == '|') { get_char_lex(); out(2, 13); STATE = H; }
-				else { STATE = ER; }
+				if (CH == '|') { get_char_lex(); out(2, 13); STATE = H; } else { STATE = ER; }
 				break;
 			case B2:
-				if (CH == '&') { get_char_lex(); out(2, 16); STATE = H; }
-				else { STATE = ER; }
+				if (CH == '&') { get_char_lex(); out(2, 16); STATE = H; } else { STATE = ER; }
 				break;
 			case OG:
 				null();
@@ -837,8 +760,7 @@ public:
 					get_char_lex();
 					out(2, lex_num);
 					STATE = H;
-				}
-				else STATE = ER;
+				} else STATE = ER;
 				break;
 			}
 		} while (STATE != V && STATE != ER);
@@ -853,11 +775,9 @@ public:
 	}
 };
 
-int main2()
-{
+int main() {
 	setlocale(LC_ALL, "RUS");
 	compiler l;
 	l.lexer();
 	l.syntax_sem();
-	return 0;
 }

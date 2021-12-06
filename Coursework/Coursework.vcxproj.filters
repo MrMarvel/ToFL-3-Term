@@ -18,13 +18,10 @@
     <ClCompile Include="Coursework.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="MishaHelp.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="MishaHelp2.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="Coursework2.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="MishaHelp.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
@@ -32,5 +29,10 @@
     <Text Include="program.txt">
       <Filter>Файлы ресурсов</Filter>
     </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="MishaHelp2.cpp">
+      <Filter>Исходные файлы</Filter>
+    </None>
   </ItemGroup>
 </Project>

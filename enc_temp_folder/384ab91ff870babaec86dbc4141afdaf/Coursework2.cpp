@@ -265,7 +265,7 @@ private:
 	//—равнение с лексемой
 	bool equal_lex(const string& lex) const { return LEX == lex; }
 
-	bool contain_lex(vector<string> arr) const {
+	bool contain_lex(vector<string> arr) {
 		return find(arr.begin(), arr.end(), LEX) != arr.end();
 	}
 
@@ -405,7 +405,8 @@ private:
 
 	//ћетод проверки правильности и соответстви€ типов выражени€ с отрицанием
 	void check_not() {
-		const string type = TYPE_STACK.top();
+		string type;
+		type = TYPE_STACK.top();
 		TYPE_STACK.pop();
 		if (type != "bool") err_proc(2);
 		else to_typeStack("bool");
