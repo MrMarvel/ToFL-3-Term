@@ -390,7 +390,7 @@ public:
 
 int main31321() {
 	compiler comp;
-	string filename = "mprogram.txt";
+	const string filename = "mprogram.txt";
 	if (comp.lexer(filename)) {
 		if (comp.syntax(filename)) {
 			

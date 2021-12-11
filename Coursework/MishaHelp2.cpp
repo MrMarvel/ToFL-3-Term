@@ -49,6 +49,8 @@ private:
 									   {":=", 18},  {"==", 19},  {"<", 20},  {"<=", 21},  {">", 22},  {">=", 23}, {"/*", 24}, {"*/", 25}, };
 	unordered_map <string, int> TN = {};
 	unordered_map <string, int> TI = {};
+	unordered_map < string, unordered_map <string, int>> table = { {"TW", {TW}}, {"TL", {TL}}, {"TI", {TI}}, {"TN", {TN}} };
+
 	unordered_map <string, descr_id*> TI_SEM = {};
 	unordered_map <string, descr_num*> TN_SEM = {};
 	unordered_map <string, string> table_sem = { {"%+%","%"}, {"%-%","%"}, {"%/%","!"}, {"%*%","%"},
@@ -64,7 +66,7 @@ private:
 												 {"$!=$","$"}, {"%==%","$"}, {"!==!","$"}, {"!==%","$"},
 												 {"%==!","$"}, {"$==$","$"}, {"$||$","$"}, {"$&&$","$"} };
 
-	unordered_map < string, unordered_map <string, int>> table = { {"TW", {TW}}, {"TL", {TL}}, {"TI", {TI}}, {"TN", {TN}} };
+
 
 	//Все возможные состояния
 	enum states {
@@ -164,6 +166,7 @@ private:
 				result += rem * pow(2, i);
 				++i;
 			}
+			buff = to_string(result);
 			return result;
 			break;
 		case 8:
@@ -175,6 +178,7 @@ private:
 				result += rem * pow(8, i);
 				++i;
 			}
+			buff = to_string(result);
 			return result;
 			break;
 		case 16:
@@ -193,8 +197,7 @@ private:
 		stream >> num;
 		char a[100];
 		sprintf_s(a, "Число = %.8f", num);
-		stream << a;
-		stream >> num;
+		buff = to_string(num);
 		return num;
 	}
 
@@ -264,43 +267,41 @@ private:
 			cout << "ОШИБКА 4: Отсутствие {";
 			break;
 		case 5:
-			cout << "ОШИБКА 5: Отсутствие }";
+			cout << "ОШИБКА 5: Неизвестный оператор " << LEX;
 			break;
 		case 6:
-			cout << "ОШИБКА 6: Неизвестный оператор " << LEX;
+			cout << "ОШИБКА 6: Отсутствие ;";
 			break;
 		case 7:
-			cout << "ОШИБКА 7: Отсутствие ;";
+			cout << "ОШИБКА 7: Неизвестный тип " << LEX;
 			break;
 		case 8:
-			cout << "ОШИБКА 8: Неизвестный тип " << LEX;
+			cout << "ОШИБКА 8: Идентификатор не объявлен";
 			break;
 		case 9:
-			cout << "ОШИБКА 9: " << LEX << " не является идентификатором";
+			cout << "ОШИБКА 9: Отсутствие )";
 			break;
 		case 10:
-			cout << "ОШИБКА 10: Отсутствие )";
+			cout << "ОШИБКА 10: Неизвестный тип выражения";
 			break;
 		case 11:
-			cout << "ОШИБКА 11: Неизвестный тип выражения";
+			cout << "ОШИБКА 11: Отсутствие \"end\"";
 			break;
 		case 12:
-			cout << "ОШИБКА 12: Отсутствие \"end\"";
+			cout << "ОШИБКА 12: Некорректный оператор присваивания для " << LEX;
 			break;
 		case 13:
-			cout << "ОШИБКА 13: Некорекктный оператор присваивания " << LEX;
+			cout << "ОШИБКА 13: Отсутствие (";
 			break;
 		case 14:
-			cout << "ОШИБКА 14: Отсутствие (";
+			cout << "ОШИБКА 14: Отсутствие \"to\"";
 			break;
 		case 15:
-			cout << "ОШИБКА 15: Отсутствие \"to\"";
+			cout << "ОШИБКА 15: Отсутствие \"next\"";
 			break;
 		case 16:
-			cout << "ОШИБКА 16: Отсутствие \"next\"";
+			cout << "ОШИБКА 16: Некорректный комментарий";
 			break;
-		case 17:
-			cout << "ОШИБКА 17: Некорекктное выражение";
 		}
 		exit(0);
 	}
@@ -337,7 +338,7 @@ private:
 
 	//Проверка идентификатора на существование (если не объявили будет ошибка)
 	void checkid() {
-		if (!TI_SEM[LEX]->isdescr) err_proc(1, LEX);
+		if (!TI_SEM[LEX]->isdescr) err_proc(8);
 		else to_stack(TI_SEM[LEX]->type);
 	}
 
@@ -348,8 +349,7 @@ private:
 			types += TYPE_STACK.top();
 			TYPE_STACK.pop();
 		}
-		if (table_sem.find(types) == table_sem.end()) err_proc(2, types);
-		else to_stack(table_sem[types]);
+		if (table_sem.find(types) == table_sem.end()) { reverse(types.begin(), types.end()); err_proc(2, types); } else to_stack(table_sem[types]);
 	}
 
 	//Метод проверки правильности и соответствия типов выражения с отрицанием
@@ -368,7 +368,8 @@ private:
 		TYPE_STACK.pop();
 		type2 = TYPE_STACK.top();
 		TYPE_STACK.pop();
-		if (type1 != type2) err_proc(3, type1 + " := " + type2);
+		if (type2 == "") err_proc(8);
+		if (type1 != type2) err_proc(3, type2 + " := " + type1);
 	}
 
 	//Метод проверки соответствия выражения типу bool
@@ -385,8 +386,7 @@ private:
 		if (equal_lex("{")) {
 			get_lexem();
 			BODY();
-			if (equal_lex("}") == 0) err_proc(4);
-		} else err_proc(5);
+		} else err_proc(4);
 	}
 
 	void BODY() {
@@ -400,7 +400,7 @@ private:
 				OPER();
 			}
 		} else if (equal_lex("if") || equal_lex("begin") || equal_lex("while") || equal_lex("for") || equal_lex("readln") || equal_lex("writeln")) OPER();
-		else err_proc(6);
+		else err_proc(5);
 
 		while (equal_lex(";")) {
 			get_lexem();
@@ -414,13 +414,13 @@ private:
 				}
 			} else if (equal_lex("if") || equal_lex("begin") || equal_lex("while") || equal_lex("for") || equal_lex("readln") || equal_lex("writeln")) OPER();
 			else if (equal_lex("}")) return;
-			else err_proc(6);
+			else err_proc(5);
 		}
-		err_proc(7);
+		err_proc(6);
 	}
 
 	void DESCR() {
-		if (equal_lex("%")) { set_descr("%"); } else if (equal_lex("!")) { set_descr("!"); } else if (equal_lex("$")) { set_descr("$"); } else err_proc(8);
+		if (equal_lex("%")) { set_descr("%"); } else if (equal_lex("!")) { set_descr("!"); } else if (equal_lex("$")) { set_descr("$"); } else err_proc(7);
 		get_lexem();
 	}
 
@@ -428,7 +428,8 @@ private:
 		to_stack(0);
 		if (is_ID()) {
 			to_stack();
-			to_stack(TI_SEM[LEX]->type);
+			if (TI_SEM[LEX]->type != "" || !descr) to_stack(TI_SEM[LEX]->type);
+			else err_proc(8);
 			get_lexem();
 			if (!equal_lex(":=")) TYPE_STACK.pop();
 			while (equal_lex(",")) {
@@ -436,7 +437,7 @@ private:
 				if (is_ID()) {
 					to_stack();
 					get_lexem();
-				} else err_proc(9);
+				} else err_proc(8);
 			}
 			if (descr)
 				while (!TI_STACK.empty()) TI_STACK.pop();
@@ -456,8 +457,8 @@ private:
 			get_lexem();
 			COMPARE();
 			if (equal_lex(")")) get_lexem();
-			else err_proc(10);
-		} else err_proc(11);
+			else err_proc(9);
+		} else err_proc(10);
 	}
 
 	void MULT() {
@@ -496,7 +497,7 @@ private:
 		if (equal_lex("begin")) {
 			OPER1();
 
-			if (!equal_lex("end")) err_proc(12);
+			if (!equal_lex("end")) err_proc(11);
 			else get_lexem();
 
 			if (is_ID()) to_stack(TI_SEM[LEX]->type);
@@ -508,12 +509,12 @@ private:
 				get_lexem();
 				COMPARE();
 				eqtype();
-			} else err_proc(13);
+			} else err_proc(12);
 		}
 
 		else if (equal_lex("readln")) {
 			get_lexem();
-			if (!ID1()) err_proc(9);
+			if (!ID1()) err_proc(8);
 		}
 
 		else if (equal_lex("writeln")) {
@@ -526,9 +527,9 @@ private:
 				get_lexem();
 				COMPARE();
 				eqbool();
-			} else err_proc(14);
+			} else err_proc(13);
 
-			if (!equal_lex(")")) err_proc(10);
+			if (!equal_lex(")")) err_proc(9);
 			else get_lexem();
 
 			OPER();
@@ -540,9 +541,9 @@ private:
 				get_lexem();
 				COMPARE();
 				eqbool();
-			} else err_proc(14);
+			} else err_proc(13);
 
-			if (!equal_lex(")")) err_proc(10);
+			if (!equal_lex(")")) err_proc(9);
 			else get_lexem();
 
 			OPER();
@@ -561,14 +562,14 @@ private:
 					get_lexem();
 					COMPARE();
 					eqtype();
-				} else err_proc(16);
+				} else err_proc(15);
 
 				if (equal_lex("to")) {
 					get_lexem();
 					COMPARE();
 					if (TYPE_STACK.top() != "%") err_proc(3, TYPE_STACK.top());
 					TYPE_STACK.pop();
-				} else err_proc(15);
+				} else err_proc(14);
 
 				if (equal_lex("step")) {
 					get_lexem();
@@ -579,9 +580,9 @@ private:
 
 				if (equal_lex("if") || equal_lex("begin") || equal_lex("while") || equal_lex("for") || equal_lex("readln") || equal_lex("writeln")) {
 					OPER();
-					if (!equal_lex("next")) err_proc(16);
+					if (!equal_lex("next")) err_proc(15);
 					else get_lexem();
-				} else err_proc(6, LEX);
+				} else err_proc(5, LEX);
 			}
 		}
 
@@ -589,7 +590,7 @@ private:
 			get_lexem();
 			COMPARE();
 			eqtype();
-		} else err_proc(6, LEX);
+		} else err_proc(5, LEX);
 	}
 
 	void EXPR() {
@@ -601,9 +602,9 @@ private:
 				if (COMPARE()) {
 					TYPE_STACK.pop();
 					get_lexem();
-				} else err_proc(17);
+				}
 			}
-		} else err_proc(17);
+		}
 	}
 
 	void OPER1() {
@@ -617,8 +618,18 @@ private:
 
 public:
 
-	bool lexer() {
-		programm.open("programm.txt");
+	compiler(string path) {
+		cout << "Выполняется лексический анализ...\n";
+		lexer(path);
+		cout << "Лексический анализ успешно завершен!\n";
+		cout << "Выполняется синтаксический и семантический анализ...\n";
+		syntax_sem();
+		cout << "Синтаксический и семантический анализ успешно завершен!\n";
+		cout << "Программа на модельном языке написана корректно!\n";
+	}
+
+	bool lexer(string path) {
+		programm.open(path);
 		lex_out.open("out.txt", ios::out);
 		states STATE;
 		get_char_lex();
@@ -777,7 +788,25 @@ public:
 
 int main() {
 	setlocale(LC_ALL, "RUS");
-	compiler l;
-	l.lexer();
-	l.syntax_sem();
+	string path;
+	int menu;
+	compiler* prog;
+	cout << "Выберите действие: 1 - выполнить проверку программы на М-языке, 2 - выход из программы: ";
+	cin >> menu;
+	while (true) {
+		switch (menu) {
+		case 1:
+			cout << "Введите путь к исполняемому файлу: ";
+			cin >> path;
+			prog = new compiler(path);
+			cout << "Хотите проверить еще файл? (1 - Да, 2 - Нет): ";
+			cin >> menu;
+			break;
+		case 2:
+			return 0;
+		default:
+			break;
+		}
+	}
+	return(0);
 }

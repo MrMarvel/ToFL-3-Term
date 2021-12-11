@@ -1,0 +1,5 @@
+{
+int a;
+readln a;
+while (true) a := 1;
+}

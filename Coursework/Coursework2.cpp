@@ -16,6 +16,7 @@ private:
 	string BUFFER, LEX;
 	int lexNum = 0;
 	bool first = false;
+	int lexLine = 1;
 
 	//Стек идентификаторов для ???
 	stack <int> TI_STACK;
@@ -64,7 +65,7 @@ private:
 	unordered_map <string, shared_ptr<Var>> TI_SEM = {};
 	unordered_map <string, shared_ptr<Num>> TN_SEM = {};
 	unordered_map <string, string> table_sem = {
-		{"int+int","int"}, {"int-int","int"}, {"int/int","!"}, {"int*int","int"},
+		{"int+int","int"}, {"int-int","int"}, {"int/int","int"}, {"int*int","int"},
 		{"int+float","float"}, {"int-float","float"}, {"int/float","float"}, {"int*float","float"},
 		{"float+int","float"}, {"float-int","float"}, {"float/int","float"}, {"float*int","float"},
 		{"float+float","float"}, {"float-float","float"}, {"float/float","float"}, {"float*float","float"},
@@ -143,9 +144,9 @@ private:
 	*/
 
 	int gc() {
+		if (cIn.eof()) return 0;
 		cIn.get(CH);
-		if (CH != cIn.eof()) return 1;
-		else return 0;
+		return 1;
 	}
 
 	bool let() const { return isalpha(CH); }
@@ -182,8 +183,7 @@ private:
 		int i = 0, rem = 0, number = 0, result = 0;
 		stringstream stream;
 
-		switch (base)
-		{
+		switch (base) {
 		case 2:
 			stream << BUFFER;
 			stream >> number;
@@ -194,25 +194,22 @@ private:
 				++i;
 			}
 			return result;
-			break;
 		case 8:
 			stream << BUFFER;
 			stream >> number;
-			while (number != 0)
-			{
+			while (number != 0) {
 				rem = number % 10;
 				number /= 10;
 				result += rem * pow(8, i);
 				++i;
 			}
 			return result;
-			break;
 		case 16:
 			stream << BUFFER;
 			stream >> std::hex >> result;
 			return result;
-			break;
 		}
+		return 0;
 	}
 
 	double convert() const {
@@ -231,15 +228,17 @@ private:
 	//Считываение лексемы из файла
 	void get_lexem() {
 		int table_num, lex_num;
-		char a;
-		a = lIn.get();
+		char a = lIn.get();
 		if (first) {
 			a = lIn.get();
-			while (a == '\r' || a == '\n') a = lIn.get();
+			while (a == '\r' || a == '\n') {
+				if (a == '\n') lexLine++;
+				a = lIn.get();
+			}
 		}
 		lIn >> table_num;
-		a = lIn.get();
-		a = lIn.get();
+		lIn.get();
+		lIn.get();
 		lIn >> lex_num;
 		switch (table_num) {
 		case 1:
@@ -258,6 +257,8 @@ private:
 			for (const auto& it : table["TI"])
 				if (it.second == lex_num) { LEX = it.first; break; }
 			break;
+		default:
+			LEX = "";
 		}
 		first = true;
 	}
@@ -291,55 +292,55 @@ private:
 		cout << "ОШИБКА " << num << ": ";
 		switch (num) {
 			case 1:
-				cout << "ОШИБКА 1: Повторное объявление идентификатора " << err;
+				cout << "Повторное объявление идентификатора " << err;
 				break;
 			case 2:
-				cout << "ОШИБКА 2: Несоответствие типов выражения " << err;
+				cout << "Несоответствие типов выражения " << err;
 				break;
 			case 3:
-				cout << "ОШИБКА 3: Тип переменной не соответствует типу выражения " << err;
+				cout << "Тип переменной не соответствует типу выражения " << err;
 				break;
 			case 4:
-				cout << "ОШИБКА 4: Отсутствие {";
+				cout << "Отсутствие \"{\"";
 				break;
 			case 5:
-				cout << "ОШИБКА 5: Отсутствие }";
+				cout << "Отсутствие \"}\"";
 				break;
 			case 6:
-				cout << "ОШИБКА 6: Неизвестный оператор " << LEX;
+				cout << "Неизвестный оператор \"" << LEX << "\"";
 				break;
 			case 7:
 				cout << "Отсутствие \";\"";
 				break;
 			case 8:
-				cout << "ОШИБКА 8: Неизвестный тип " << LEX;
+				cout << "Неизвестный тип " << LEX;
 				break;
 			case 9:
-				cout << "ОШИБКА 9: " << LEX << " не является идентификатором";
+				cout << LEX << " не является идентификатором";
 				break;
 			case 10:
-				cout << "ОШИБКА 10: Отсутствие )";
+				cout << "Отсутствие )";
 				break;
 			case 11:
-				cout << "ОШИБКА 11: Неизвестный тип выражения";
+				cout << "Неизвестный тип выражения";
 				break;
 			case 12:
-				cout << "ОШИБКА 12: Отсутствие \"end\"";
+				cout << "Отсутствие \"end\"";
 				break;
 			case 13:
-				cout << "ОШИБКА 13: Некорректный оператор присваивания " << LEX;
+				cout << "Некорректный оператор присваивания " << LEX;
 				break;
 			case 14:
-				cout << "ОШИБКА 14: Отсутствие \"(\"";
+				cout << "Отсутствие \"(\"";
 				break;
 			case 15:
-				cout << "ОШИБКА 15: Отсутствие \"to\"";
+				cout << "Отсутствие \"to\"";
 				break;
 			case 16:
-				cout << "ОШИБКА 16: Отсутствие \"next\"";
+				cout << "Отсутствие \"next\"";
 				break;
 			case 17:
-				cout << "ОШИБКА 17: Некорректное выражение";
+				cout << "Некорректное выражение";
 				break;
 			case 18:
 				cout << "Отсутствие \":\"";
@@ -350,8 +351,17 @@ private:
 			case 20:
 				cout << "Не объявленная переменная";
 				break;
+			case 21:
+				cout << "Не найдено step после [";
+				break;
+			case 22:
+				cout << "Не найдено ]";
+				break;
+			case 23:
+				cout << "Не объявленный идентификатор \"" << LEX << "\"";
+				break;
 		}
-		cout << "\n";
+		cout << " на строке " << lexLine << "\n";
 		system("pause");
 		exit(0);
 	}
@@ -413,18 +423,16 @@ private:
 
 	//Проверка между переменной и выражением на соответствие типов перед присваиванием
 	void eqtype() {
-		string type1, type2;
-		type1 = TYPE_STACK.top();
+		const string type1 = TYPE_STACK.top();
 		TYPE_STACK.pop();
-		type2 = TYPE_STACK.top();
+		const string type2 = TYPE_STACK.top();
 		TYPE_STACK.pop();
-		if (type1 != type2) err_proc(3, type1 + " := " + type2);
+		if (type1 == "bool" && type2 != "bool" || type2 == "bool" && type1 != "bool") err_proc(3, "\"" + type1 + "\" := \"" + type2 + "");
 	}
 
 	//Метод проверки соответствия выражения типу bool
 	void eqbool() {
-		string type1;
-		type1 = TYPE_STACK.top();
+		const string type1 = TYPE_STACK.top();
 		TYPE_STACK.pop();
 		if (type1 != "bool") err_proc(2, type1);
 	}
@@ -435,9 +443,9 @@ private:
 		if (equal_lex("{")) {
 			get_lexem();
 			BODY();
-			if (equal_lex("}") == 0) err_proc(4);
+			if (equal_lex("}") == 0) err_proc(5);
 		}
-		else err_proc(5);
+		else err_proc(4);
 	}
 
 	void BODY() {
@@ -446,10 +454,10 @@ private:
 		} else if (S_ID()) {
 			OPER();
 		} else {
-			const auto it = TW.begin();
+			auto it = TW.begin();
 			bool o = false;
 			while (it != TW.end()) {
-				if (equal_lex(it->first)) o = true;
+				if (equal_lex(it++->first)) o = true;
 			}
 			if (o) OPER();
 			else err_proc(6);
@@ -460,7 +468,8 @@ private:
 			if (S_TYPE()) {
 			} else if (S_ID()) {
 				OPER();
-			} else {
+			}
+			else {
 				auto it = TW.begin();
 				bool o = false;
 				while (it != TW.end()) {
@@ -470,6 +479,7 @@ private:
 					}
 				}
 				if (o) OPER();
+				else if (equal_lex("}")) return;
 				else err_proc(6);
 			}
 		}
@@ -499,7 +509,7 @@ private:
 		to_idStack(0);
 		if (is_ID()) {
 			to_idStack();
-			get_lexem();;
+			get_lexem();
 			while (equal_lex(",")) {
 				get_lexem();
 				if (is_ID()) {
@@ -517,15 +527,34 @@ private:
 	}
 
 	bool S_ID() {
-		return is_ID();
+		to_idStack(0);
+		if (is_ID()) {
+			if (!TI_SEM[LEX]->isDeclared) err_proc(23);
+			to_idStack();
+			to_typeStack(TI_SEM[LEX]->type);
+			get_lexem();
+			if (!equal_lex(":=")) TYPE_STACK.pop();
+			while (equal_lex(",")) {
+				get_lexem();
+				if (is_ID()) {
+					if (!TI_SEM[LEX]->isDeclared) err_proc(23);
+					to_idStack();
+					get_lexem();
+				} else err_proc(9);
+			}
+			while (!TI_STACK.empty()) TI_STACK.pop();
+		} else {
+			TI_STACK.pop();
+			return false;
+		}
+		return true;
 	}
 
 
 	void FACT() {
 		if (is_ID()) { checkid(); get_lexem(); }
 		else if (is_NUM()) { to_typeStack(TN_SEM[LEX]->type); get_lexem(); }
-		else if (equal_lex("true")) { to_typeStack("bool"); get_lexem(); }
-		else if (equal_lex("false")) { to_typeStack("bool"); get_lexem(); }
+		else if (equal_lex("true") || equal_lex("false")) { to_typeStack("bool"); get_lexem(); }
 		else if (equal_lex("!")) {
 			get_lexem();
 			FACT();
@@ -594,8 +623,9 @@ private:
 
 		else if (equal_lex("readln")) {
 			get_lexem();
-			
-			if (S_ID()) {
+
+			if (!S_ID()) err_proc(9);
+			/*if (S_ID()) {
 				if (TI_SEM[LEX]->isDeclared) {
 					TI_SEM[LEX]->assign(string("0x0010")+to_string(rand()%100));
 				} else err_proc(20);
@@ -609,7 +639,7 @@ private:
 						get_lexem();
 					} else err_proc(9);
 				}
-			} else err_proc(9);
+			} else err_proc(9);*/
 		}
 
 		else if (equal_lex("writeln")) {
@@ -669,18 +699,26 @@ private:
 					TYPE_STACK.pop();
 				} else err_proc(15);
 
-				if (equal_lex("step")) {
+				if (equal_lex("[")) {
 					get_lexem();
-					COMPARE();
-					if (TYPE_STACK.top() != "int") err_proc(3, TYPE_STACK.top());
-					TYPE_STACK.pop();
+					if (equal_lex("step")) {
+						get_lexem();
+						COMPARE();
+						if (TYPE_STACK.top() != "int") err_proc(3, TYPE_STACK.top());
+						TYPE_STACK.pop();
+					} else err_proc(21);
+					if (equal_lex("]")) get_lexem();
+					else err_proc(22);
 				}
 
-				const auto it = TW.begin();
+				auto it = TW.begin();
 				bool o = false;
-				while (it != TW.end()) {
+				for (; it != TW.end(); it++) {
 					if (is_type(it->first)) continue;
-					if (equal_lex(it->first)) o = true;
+					if (equal_lex(it->first)) {
+						o = true;
+						break;
+					}
 				}
 				if (o) {
 					OPER();
@@ -727,11 +765,11 @@ public:
 
 	bool lexer(const string& filename) {
 		cIn.open(filename);
-		string lexFilename = "lex." + filename;
-		lOut.open(lexFilename, ios::out | ios::in | ios::trunc);
 		if (!cIn.is_open()) {
 			throw exception(string("There is no input file \"" + filename + "\"").c_str());
 		}
+		string lexFilename = "lex." + filename;
+		lOut.open(lexFilename, ios::out | ios::in | ios::trunc);
 		if (!lOut.is_open()) {
 			throw runtime_error(string("I can't open file \"" + lexFilename + "\" to write in!").c_str());
 		}
@@ -746,8 +784,9 @@ public:
 					if (CH == '\n') lOut << "\n";
 					gc();
 				}
-				if (cIn.eof()) STATE = ER;
-				if (let()) {
+				if (cIn.eof()) {
+					STATE = ER;
+				} else if (let()) {
 					nill();
 					add();
 					gc();
@@ -809,7 +848,7 @@ public:
 				else if (CH == '.') { add(); gc(); STATE = P1; }
 				else if (CH == 'D' || CH == 'd') { add(); gc(); STATE = D; }
 				else if (let()) STATE = ER;
-				else { put("TN"); out(3, lexNum); STATE = H; }
+				else { put("TN", "int"); out(3, lexNum); STATE = H; }
 				break;
 			case N16:
 				while (check_hex()) { add(); gc(); }
@@ -820,21 +859,21 @@ public:
 				if (check_hex()) STATE = N16;
 				else if (CH == 'H' || CH == 'h') { gc(); STATE = HX; }
 				else if (let()) STATE = ER;
-				else { translate(2); put("TN"); out(3, lexNum); STATE = H; }
+				else { translate(2); put("TN", "int"); out(3, lexNum); STATE = H; }
 				break;
 			case O:
 				if (let() || digit()) STATE = ER;
-				else { translate(8); put("TN"); out(3, lexNum); STATE = H; }
+				else { translate(8); put("TN", "int"); out(3, lexNum); STATE = H; }
 				break;
 			case D:
 				if (CH == 'H' || CH == 'h') { gc(); STATE = HX; }
 				else if (check_hex()) STATE = N16;
 				else if (let()) STATE = ER;
-				else { put("TN"); out(3, lexNum); STATE = H; }
+				else { put("TN", "int"); out(3, lexNum); STATE = H; }
 				break;
 			case HX:
 				if (let() || digit())STATE = ER;
-				else { translate(16); put("TN"); out(3, lexNum); STATE = H; }
+				else { translate(16); put("TN", "int"); out(3, lexNum); STATE = H; }
 				break;
 			case E11:
 				if (digit()) { add(); gc(); STATE = E12; }
@@ -852,12 +891,12 @@ public:
 				if (check_hex()) STATE = N16;
 				else if (CH == 'H' || CH == 'h') { gc(); STATE = HX; }
 				else if (let()) STATE = ER;
-				else { convert(); put("TN"); out(3, lexNum); STATE = H; }
+				else { convert(); put("TN", "float"); out(3, lexNum); STATE = H; }
 				break;
 			case E13:
 				while (digit()) { add(); gc(); }
 				if (let() || CH == '.') STATE = ER;
-				else { convert(); put("TN"); out(3, lexNum); STATE = H; }
+				else { convert(); put("TN", "float"); out(3, lexNum); STATE = H; }
 				break;
 			case P1:
 				if (digit()) STATE = P2; else STATE = ER;
@@ -866,7 +905,7 @@ public:
 				while (digit()) { add(); gc(); }
 				if (CH == 'E' || CH == 'e') { add(); gc(); STATE = E21; }
 				else if (let() || CH == '.') STATE = ER;
-				else { convert(); put("TN"); out(3, lexNum); STATE = H; }
+				else { convert(); put("TN", "float"); out(3, lexNum); STATE = H; }
 				break;
 			case E21:
 				if (CH == '+' || CH == '-') { add(); gc(); STATE = ZN; }
@@ -876,7 +915,7 @@ public:
 			case E22:
 				while (digit()) { add(); gc(); }
 				if (let() || CH == '.') STATE = ER;
-				else { convert(); put("TN"); out(3, lexNum); STATE = H; }
+				else { convert(); put("TN", "float"); out(3, lexNum); STATE = H; }
 				break;
 			case C1:
 				if (CH == '*') { gc(); STATE = C2; }
@@ -932,6 +971,9 @@ public:
 				}
 				else STATE = ER;
 				break;
+			case V: break;
+			case ER:
+				cout << "An Lex error occurred after character \"" + to_string(CH) + "\"";
 			}
 		} while (STATE != V && STATE != ER);
 		if (STATE == ER) lOut << "Не распознанная лексема \"" << CH << "\"\n";
@@ -951,14 +993,21 @@ public:
 	}
 };
 
-int main() {
+int main(const int argc, char* argv[]) {
 	setlocale(LC_ALL, "RUS");
-	compiler comp;
-	const string filename = "mprogram.txt";
-	if (comp.lexer(filename)) {
-		if (comp.syntaxAndSeman(filename)) {
+	try {
+		if (argc < 2) throw exception("Not enough arguments: 1");
+		const string filename = argv[1];
+		if (compiler comp; comp.lexer(filename)) {
+			if (comp.syntaxAndSeman(filename)) {
 
+			}
 		}
+	} catch (runtime_error e) {
+		cout << "RUNTIME ERROR " << e.what() << "\n";
+		throw e;
+	} catch (exception e) {
+		cout << "ERROR " << e.what() << "\n";
 	}
 	system("pause");
 }

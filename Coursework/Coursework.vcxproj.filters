@@ -29,6 +29,9 @@
     <Text Include="program.txt">
       <Filter>Файлы ресурсов</Filter>
     </Text>
+    <Text Include="input.txt">
+      <Filter>Файлы ресурсов</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <None Include="MishaHelp2.cpp">
