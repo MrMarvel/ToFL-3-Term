@@ -1,5 +1,11 @@
 {
 int a;
 readln a;
-while (true) a := 1;
+int b;
+while (a < 6) a := a + 1;
+if (a > 5) writeln 5 else writeln a;
+for a:=0 to 5 [step 2] begin
+  b := a – 2;
+  writeln(b)
+end next;
 }

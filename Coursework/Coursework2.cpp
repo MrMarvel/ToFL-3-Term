@@ -58,7 +58,7 @@ private:
 	unordered_map <string, int> TL = {
 		{"{", 1}, {"}", 2}, {"&&", 3}, {"!", 4}, {"||", 5}, {",", 6},  {";", 7},  {"[", 8}, {"]", 9},
 		{"(", 10}, {")", 11},  {"+", 12},  {"-", 13},  {"*", 14},  {"/", 15}, {"==", 16}, {"!=", 17},
-		{">", 18}, {"<", 19}, {"<=", 20}, {">=", 21}, {"/*", 22}, {"*/", 23}, {":=", 24}
+		{">", 18}, {"<", 19}, {"<=", 20}, {">=", 21}, {"/*", 22}, {"*/", 23}, {":=", 24}, {"–", 13}
 	};
 	unordered_map <string, int> TN = {};
 	unordered_map <string, int> TI = {};
@@ -85,6 +85,10 @@ private:
 	TL – таблица ограничителей М-языка, #2
 	TN – таблица чисел, используемых в программе #3
 	TI - таблица идентификаторов программы, #4
+	TN_SEM – дополненная таблиа TN, используемая для семантического анализа
+	TI_SEM - дополненная таблиа TI, используемая для семантического анализа
+	table - Таблица для доступа к остальным таблицам
+	table_sem - все возможные типы выражений
 	*/
 
 
@@ -362,7 +366,7 @@ private:
 				break;
 		}
 		cout << " на строке " << lexLine << "\n";
-		system("pause");
+		//system("pause");
 		exit(0);
 	}
 
@@ -976,10 +980,14 @@ public:
 				cout << "An Lex error occurred after character \"" + to_string(CH) + "\"";
 			}
 		} while (STATE != V && STATE != ER);
-		if (STATE == ER) lOut << "Не распознанная лексема \"" << CH << "\"\n";
+		if (STATE == ER) {
+			lOut << "Не распознанная лексема \"" << CH << "\"\n";
+			cout << "ЛЕКСИЧЕСКИЙ АНАЛИЗАТОР: Не распознанная лексема \"" << CH << "\"\n";
+			return false;
+		}
 		lOut.close();
 		cIn.close();
-		return STATE;
+		return true;
 	}
 
 	bool syntaxAndSeman(const string& filename) {
@@ -1009,5 +1017,5 @@ int main(const int argc, char* argv[]) {
 	} catch (exception e) {
 		cout << "ERROR " << e.what() << "\n";
 	}
-	system("pause");
+	//system("pause");
 }
