@@ -402,7 +402,7 @@ private:
 
 	//Проверка идентификатора на существование (если не объявили будет ошибка)
 	void checkid() {
-		if (!TI_SEM[LEX]->isDeclared) err_proc(1, LEX);
+		if (!TI_SEM[LEX]->isDeclared) err_proc(23, LEX);
 		else to_typeStack(TI_SEM[LEX]->type);
 	}
 

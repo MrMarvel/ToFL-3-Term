@@ -142,6 +142,7 @@
   <ItemGroup>
     <ClCompile Include="Coursework.cpp" />
     <ClCompile Include="Coursework2.cpp" />
+    <ClCompile Include="Lexer.cpp" />
     <ClCompile Include="MishaHelp.cpp" />
     <None Include="MishaHelp2.cpp" />
   </ItemGroup>
